@@ -2,5 +2,9 @@
     "java.configuration.updateBuildConfiguration": "automatic",
     "cSpell.words": [
         "schnorr"
-    ]
+    ],
+    "sonarlint.connectedMode.project": {
+        "connectionId": "herschdorfer",
+        "projectKey": "Herschdorfer_schnorr"
+    }
 }

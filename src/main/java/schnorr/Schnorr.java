@@ -10,13 +10,29 @@ import java.util.concurrent.ThreadPoolExecutor;
 
 import crypt_basics.hash.Hash;
 
+/**
+ * Schnorr signature
+ * 
+ * @see <a href="https://en.wikipedia.org/wiki/Schnorr_signature">Schnorr
+ *      signature</a>
+ */
 public class Schnorr {
 
+    /**
+     * Schnorr group (p, q, g)
+     */
     public class SchnorrGroup implements Comparable<SchnorrGroup> {
         public final BigInteger p;
         public final BigInteger q;
         public final BigInteger g;
 
+        /**
+         * Schnorr group (p, q, g)
+         * 
+         * @param p prime number p
+         * @param q prime number q
+         * @param g generator g
+         */
         public SchnorrGroup(BigInteger p, BigInteger q, BigInteger g) {
             this.p = p;
             this.q = q;
@@ -43,6 +59,9 @@ public class Schnorr {
         }
     }
 
+    /**
+     * Schnorr signature (r, s)
+     */
     public class SchnorrSignature {
         public final BigInteger r;
         public final BigInteger s;
@@ -61,6 +80,13 @@ public class Schnorr {
     private BigInteger x;
     private BigInteger y;
 
+    /**
+     * Generate a Schnorr group (p, q, g) such that p = qr + 1
+     * 
+     * @param bitLength the bit length of the prime number p
+     * @throws InterruptedException
+     * 
+     */
     public Schnorr(int bitLength) throws InterruptedException {
         int cores = Runtime.getRuntime().availableProcessors();
 
