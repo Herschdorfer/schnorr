@@ -3,12 +3,16 @@ package schnorr;
 import java.math.BigInteger;
 import java.security.NoSuchAlgorithmException;
 import java.security.SecureRandom;
+import java.util.PriorityQueue;
+import java.util.Queue;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ThreadPoolExecutor;
 
 import crypt_basics.hash.Hash;
 
 public class Schnorr {
 
-    public class SchnorrGroup {
+    public class SchnorrGroup implements Comparable<SchnorrGroup> {
         public BigInteger p;
         public BigInteger q;
         public BigInteger g;
@@ -17,6 +21,25 @@ public class Schnorr {
             this.p = p;
             this.q = q;
             this.g = g;
+        }
+
+        @Override
+        public int compareTo(SchnorrGroup arg0) {
+            return q.compareTo(arg0.q);
+        }
+
+        @Override
+        public boolean equals(Object obj) {
+            if (!(obj instanceof SchnorrGroup)) {
+                return false;
+            }
+
+            return q.equals(((SchnorrGroup) obj).q);
+        }
+
+        @Override
+        public int hashCode() {
+            return q.hashCode();
         }
     }
 
@@ -40,7 +63,25 @@ public class Schnorr {
 
     public Schnorr(int bitLength) {
 
-        group = generateSchnorrGroup(bitLength);
+        ThreadPoolExecutor executor = (ThreadPoolExecutor) Executors.newFixedThreadPool(8);
+
+        Queue<SchnorrGroup> queue = new PriorityQueue<>();
+
+        for (int i = 0; i < 8; i++) {
+            executor.execute(() -> {
+                queue.add(generateSchnorrGroup(bitLength));
+            });
+        }
+
+        while (null == (group = queue.poll())) {
+            try {
+                Thread.sleep(100);
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
+        }
+
+        executor.shutdown();
 
         generateKeyPair();
 
@@ -107,10 +148,16 @@ public class Schnorr {
         BigInteger e = new BigInteger(hash.hash(message));
 
         do {
+            /**
+             * Generate a random number k such that 1 < k < q
+             */
             do {
                 k = new BigInteger(group.q.bitLength(), new SecureRandom());
             } while (k.compareTo(BigInteger.ONE) <= 0 || k.compareTo(group.q) >= 0);
 
+            /**
+             * Calculate r = g^k mod p mod q
+             */
             r = group.g.modPow(k, group.p).mod(group.q);
         } while (r.equals(BigInteger.ZERO));
 
