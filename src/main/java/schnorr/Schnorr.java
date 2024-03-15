@@ -13,9 +13,9 @@ import crypt_basics.hash.Hash;
 public class Schnorr {
 
     public class SchnorrGroup implements Comparable<SchnorrGroup> {
-        public BigInteger p;
-        public BigInteger q;
-        public BigInteger g;
+        public final BigInteger p;
+        public final BigInteger q;
+        public final BigInteger g;
 
         public SchnorrGroup(BigInteger p, BigInteger q, BigInteger g) {
             this.p = p;
@@ -44,8 +44,8 @@ public class Schnorr {
     }
 
     public class SchnorrSignature {
-        public BigInteger r;
-        public BigInteger s;
+        public final BigInteger r;
+        public final BigInteger s;
 
         public SchnorrSignature(BigInteger r, BigInteger s) {
             this.r = r;
@@ -61,24 +61,23 @@ public class Schnorr {
     private BigInteger x;
     private BigInteger y;
 
-    public Schnorr(int bitLength) {
+    public Schnorr(int bitLength) throws InterruptedException {
+        int cores = Runtime.getRuntime().availableProcessors();
 
-        ThreadPoolExecutor executor = (ThreadPoolExecutor) Executors.newFixedThreadPool(8);
+        ThreadPoolExecutor executor = (ThreadPoolExecutor) Executors.newFixedThreadPool(cores);
 
         Queue<SchnorrGroup> queue = new PriorityQueue<>();
 
-        for (int i = 0; i < 8; i++) {
+        for (int i = 0; i < cores; i++) {
             executor.execute(() -> {
-                queue.add(generateSchnorrGroup(bitLength));
+                SchnorrGroup loc = generateSchnorrGroup(bitLength);
+
+                queue.add(loc);
             });
         }
 
         while (null == (group = queue.poll())) {
-            try {
-                Thread.sleep(100);
-            } catch (InterruptedException e) {
-                e.printStackTrace();
-            }
+            Thread.sleep(100);
         }
 
         executor.shutdown();
